@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMARTCHEF | Recipes</title>
+    <style>
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #faf9f6; color: #333; line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
+        header { background-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #e63946; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: #e63946; }
+        .register-btn { background-color: #e63946; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.3s; }
+        .register-btn:hover { background-color: #d62828; }
+        .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #666; }
+        .modal-content h3 { margin-bottom: 20px; color: #333; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
+        .submit-btn { width: 100%; background: #e63946; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px; }
+        .red { color: #e63946; font-size: 0.9rem; margin-top: 10px; text-align: center; }
+        footer { background: #1d3557; color: white; text-align: center; padding: 20px; margin-top: auto; }
+
+        .recipes-header { text-align: center; padding: 40px 20px 20px; }
+        .recipes-header h1 { color: #1d3557; font-size: 2.5rem; }
+        .recipe-grid { 
+            max-width: 1200px; 
+            margin: 0 auto 40px; 
+            padding: 0 20px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 30px; 
+            align-items: start; /* <-- BUG FIX APPLIED HERE */
+        }
+        .recipe-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; display: flex; flex-direction: column; }
+        .recipe-card:hover { transform: translateY(-5px); }
+        .recipe-img { height: 200px; background-size: cover; background-position: center; }
+        .recipe-info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .recipe-info h3 { color: #1d3557; margin-bottom: 10px; }
+        .recipe-info p { font-size: 0.95rem; color: #666; margin-bottom: 15px; flex-grow: 1; }
+        
+        .dropdown-box { margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; }
+        .dropdown-btn { width: 100%; padding: 10px 15px; background: #f8f9fa; border: none; text-align: left; font-weight: bold; color: #1d3557; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .dropdown-btn:hover { background: #e9ecef; }
+        .dropdown-content { display: none; padding: 15px; background: white; border-top: 1px solid #e0e0e0; font-size: 0.9rem; color: #555; }
+        .dropdown-content ul { padding-left: 20px; }
+        .dropdown-content ul li { margin-bottom: 5px; }
+        
+        .view-btn { display: inline-block; padding: 8px 15px; background: #e63946; color: white; border-radius: 4px; font-size: 0.9rem; font-weight: bold; text-align: center; transition: background 0.3s; }
+        .view-btn:hover { background: #d62828; }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; flex-direction: column; width: 100%; position: absolute; top: 60px; left: 0; background: #fff; padding: 20px; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+            .nav-links.active { display: flex; }
+            .menu-toggle { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+             <a href="index.html" class="logo">SmartChef</a>
+            <div class="menu-toggle" id="mobile-menu">☰</div>
+            <nav class="nav-links" id="nav-links">
+                <a href="index.html">Home</a>
+                <a href="recipes.html">Recipes</a>
+                <a href="about.html">About</a>
+                <a href="assistant.html">AI Assistant</a>
+                <button class="register-btn" onclick="openModal()">Register</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="recipes-header">
+            <h1>Our Signature Recipes</h1>
+            <p>Hand-picked favorites to elevate your home cooking.</p>
+        </div>
+        
+        <div class="recipe-grid">
+            <div class="recipe-card">
+                <div class="recipe-img" style="background-image: url('Pizza.jpg');"></div>
+                <div class="recipe-info">
+                    <h3>Classic Margherita Pizza</h3>
+                    <p>A timeless Italian classic featuring fresh tomatoes, basil, mozzarella, and a perfectly blistered crust.</p>
+                    
+                    <div class="dropdown-box">
+                        <button class="dropdown-btn" onclick="toggleDropdown(this)">Ingredients <span>▼</span></button>
+                        <div class="dropdown-content">
+                            <ul>
+                                <li>Pizza Dough</li>
+                                <li>San Marzano Tomatoes</li>
+                                <li>Fresh Mozzarella</li>
+                                <li>Fresh Basil Leaves</li>
+                                <li>Olive Oil & Salt</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="recipe-card">
+                <div class="recipe-img" style="background-image: url('salad.jpg');"></div>
+                <div class="recipe-info">
+                    <h3>Quinoa Salad Bowl</h3>
+                    <p>A healthy and vibrant bowl packed with mixed greens, avocado, cherry tomatoes, and a lemon vinaigrette.</p>
+                    
+                    <div class="dropdown-box">
+                        <button class="dropdown-btn" onclick="toggleDropdown(this)">Ingredients <span>▼</span></button>
+                        <div class="dropdown-content">
+                            <ul>
+                                <li>1 Cup Quinoa</li>
+                                <li>Mixed Greens</li>
+                                <li>1 Ripe Avocado</li>
+                                <li>Cherry Tomatoes</li>
+                                <li>Lemon & Olive Oil</li>
+                            </ul>
+                        </div>
+                    </div>
+                 
+                </div>
+            </div>
+            <div class="recipe-card">
+                <div class="recipe-img" style="background-image: url('griledsalmon.jpg');"></div>
+                <div class="recipe-info">
+                    <h3>Grilled Salmon</h3>
+                    <p>Tender salmon fillets grilled to perfection, served with asparagus and a garlic herb butter sauce.</p>
+                    
+                    <div class="dropdown-box">
+                        <button class="dropdown-btn" onclick="toggleDropdown(this)">Ingredients <span>▼</span></button>
+                        <div class="dropdown-content">
+                            <ul>
+                                <li>2 Salmon Fillets</li>
+                                <li>Fresh Asparagus</li>
+                                <li>Garlic Cloves</li>
+                                <li>Butter & Herbs</li>
+                                <li>Lemon Wedges</li>
+                            </ul>
+                        </div>
+                    </div>
+             
+                </div>
+            </div>
+            <div class="recipe-card">
+                <div class="recipe-img" style="background-image: url('tacos.jpg');"></div>
+                <div class="recipe-info">
+                    <h3>Spicy Beef Tacos</h3>
+                    <p>Authentic street-style tacos filled with seasoned beef, fresh cilantro, onions, and spicy salsa.</p>
+                    
+                    <div class="dropdown-box">
+                        <button class="dropdown-btn" onclick="toggleDropdown(this)">Ingredients <span>▼</span></button>
+                        <div class="dropdown-content">
+                            <ul>
+                                <li>Ground Beef</li>
+                                <li>Corn Tortillas</li>
+                                <li>Taco Seasoning</li>
+                                <li>Onion & Cilantro</li>
+                                <li>Spicy Salsa</li>
+                            </ul>
+                        </div>
+                    </div>
+               
+                </div>
+            </div>
+            <div class="recipe-card">
+                <div class="recipe-img" style="background-image: url('chocolatecake.jpg');"></div>
+                <div class="recipe-info">
+                    <h3>Chocolate Lava Cake</h3>
+                    <p>A decadent dessert with a warm, gooey chocolate center, best paired with a scoop of vanilla bean ice cream.</p>
+                    
+                    <div class="dropdown-box">
+                        <button class="dropdown-btn" onclick="toggleDropdown(this)">Ingredients <span>▼</span></button>
+                        <div class="dropdown-content">
+                            <ul>
+                                <li>Dark Chocolate</li>
+                                <li>Butter</li>
+                                <li>Sugar & Eggs</li>
+                                <li>Flour</li>
+                                <li>Vanilla Extract</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="regModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">×</span>
+            <h3>Register</h3>
+            <form action="" id="validateform">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" name="name" id="name">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="text" name="phone" id="phone">
+                </div>
+                <span id="span"></span>
+                <button type="submit" class="submit-btn">Checkout</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+     <p>SmartChef: "Khud banao Khud khao".</p>
+    </footer>
+
+    <script>
+        document.getElementById('mobile-menu').addEventListener('click', function() { document.getElementById('nav-links').classList.toggle('active'); });
+    
+        const modal = document.getElementById('regModal');
+        function openModal() { modal.style.display = 'flex'; }
+        function closeModal() { modal.style.display = 'none'; }
+        window.onclick = function(event) { if (event.target == modal) closeModal(); }
+
+        function toggleDropdown(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('span');
+            
+            if (content.style.display === "block") {
+                content.style.display = "none";
+                icon.innerHTML = "▼";
+            } else {
+                content.style.display = "block";
+                icon.innerHTML = "▲";
+            }
+        }
+
+      
+        document.getElementById("validateform").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let str = document.getElementById("name").value;
+            let regex = /^[A-Za-z0-9]{2,6}$/;
+            let result = regex.test(str);
+            let str2 = document.getElementById("phone").value;
+            let regex2 = /^[0-9]{11}$/;
+            let result2 = regex2.test(str2);
+            let msg = document.getElementById("span");
+            msg.innerHTML = "";
+            if (result && result2) { alert("form submitted"); closeModal(); this.reset(); } 
+            else { msg.classList.add("red"); let errorMsgs = ""; if(!result) { errorMsgs += "<p>Enter a username between 2-6</p>"; } if(!result2) { errorMsgs += "<p>Enter a phone between 1-11</p>"; } msg.innerHTML = errorMsgs; }
+        });
+    </script>
+</body>
+</html>
